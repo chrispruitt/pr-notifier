@@ -1,0 +1,16 @@
+kind: pipeline
+name: default
+
+steps:
+- name: docker
+  image: plugins/docker
+  settings:
+    username: chrispruitt
+    password: 
+      from_secret: docker_password
+    repo: chrispruitt/pr-notifier
+    tags: latest
+    squash: true
+    auto_tag: true
+    cache_from:
+      - "chrispruitt/pr-notifier:latest"
