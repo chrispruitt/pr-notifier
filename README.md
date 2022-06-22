@@ -18,3 +18,16 @@
     -t, --token string          slack token
     -u, --user string           bitbucket app username
 ```
+
+### Docker
+
+```sh
+docker run -it chrispruitt/pr-notifier:latest \
+    notify \
+    --author some_bitbucket_author \
+    --author some_bitbucket_author \
+    --user some_bb_user \
+    --channel XXXXXXXX \
+    --password XXXXXXXXXXXXXX \
+    --token xoxb-XXXXXXX
+```
