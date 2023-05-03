@@ -13,6 +13,8 @@ var (
 func init() {
 	NotifyCmd.PersistentFlags().StringVarP(&notifySlackInput.BitbucketAppPassUser, "user", "u", "", "bitbucket app username")
 	NotifyCmd.Flags().StringArrayVarP(&notifySlackInput.Usernames, "authors", "a", nil, "bitbucket usernames, UUIDs, or authors of PRs")
+	NotifyCmd.Flags().StringVarP(&notifySlackInput.Workspace, "workspace", "w", "", "bitbucket workspace key. Required when --project-key is set.")
+	NotifyCmd.Flags().StringArrayVar(&notifySlackInput.ProjectKeys, "project-key", nil, "bitbucket workspace key. Required when --project-key is set.")
 	NotifyCmd.Flags().StringVarP(&notifySlackInput.BitbucketAppPassSecret, "password", "p", "", "bitbucket app password")
 	NotifyCmd.Flags().StringVarP(&notifySlackInput.SlackChannel, "channel", "c", "", "slack channel")
 	NotifyCmd.Flags().StringVarP(&notifySlackInput.SlackToken, "token", "t", "", "slack token")
