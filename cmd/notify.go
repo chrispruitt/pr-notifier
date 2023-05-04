@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"fmt"
+	"os"
+
 	lib "github.com/chrispruitt/pr-notifier/lib"
 
 	"github.com/spf13/cobra"
@@ -26,6 +29,14 @@ var NotifyCmd = &cobra.Command{
 	Use:   "notify",
 	Short: "post open PRs to slack",
 	Run: func(cmd *cobra.Command, args []string) {
+
+		if notifySlackInput.ProjectKeys != nil || len(notifySlackInput.ProjectKeys) > 0 {
+			if notifySlackInput.Workspace == "" {
+				fmt.Println("Missing --workspace. Required when --project-key is set.")
+				os.Exit(1)
+			}
+		}
+
 		err := lib.NotifySlack(&notifySlackInput)
 		if err != nil {
 			panic(err)
