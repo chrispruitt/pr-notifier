@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"time"
 
@@ -23,6 +25,12 @@ type PullRequest struct {
 	Author struct {
 		DisplayName string `json:"display_name"`
 	} `json:"author"`
+	CreatedOn   time.Time `json:"created_on"`
+	Destination struct {
+		Repository struct {
+			Name string `json:"name"`
+		} `json:"repository"`
+	} `json:"destination"`
 }
 
 type GetRepositoriesOutput struct {
@@ -81,6 +89,10 @@ func NotifySlack(input *NotifySlackInput) error {
 			}
 		}
 	}
+
+	sort.Slice(prs[:], func(i, j int) bool {
+		return prs[i].CreatedOn.After(prs[j].CreatedOn)
+	})
 
 	if len(prs) > 0 {
 		err := postToSlack(prs, input)
@@ -155,11 +167,12 @@ func GetPullRequestsByRepo(workspace string, repo Repository, input *NotifySlack
 			return nil, fmt.Errorf("Error decoding response output: %s", err.Error())
 		}
 
-		if len(pullRequestOutput.PullRequests) == 0 {
-			break
-		}
 		repos = append(repos, pullRequestOutput.PullRequests...)
 		curPage++
+
+		if len(pullRequestOutput.PullRequests) < pageLength {
+			break
+		}
 	}
 	return repos, nil
 }
@@ -201,11 +214,12 @@ func GetRepositoriesByProject(projectKey string, workspace string, input *Notify
 			return nil, fmt.Errorf("Error decoding response output: %s", err.Error())
 		}
 
-		if len(getRepositoriesOutput.Repositories) == 0 {
-			break
-		}
 		repos = append(repos, getRepositoriesOutput.Repositories...)
 		curPage++
+
+		if len(getRepositoriesOutput.Repositories) < pageLength {
+			break
+		}
 	}
 	return repos, nil
 }
@@ -221,12 +235,27 @@ func postToSlack(prs []PullRequest, input *NotifySlackInput) error {
 	msg := "*Open PR Digest*\n"
 
 	for _, pr := range prs {
-		msg += fmt.Sprintf("%s - %s - %s\n", pr.Author.DisplayName, pr.Title, pr.Links.Html.Href)
+		msg += fmt.Sprintf("%s - %s - %s - %s\n", pr.Author.DisplayName, pr.Destination.Repository.Name, getAgeDays(pr.CreatedOn), slackLink(pr.Title, pr.Links.Html.Href))
 	}
-	// TODO add link title instead of full url
-	_, _, err := slackClient.PostMessage(input.SlackChannel, slack.MsgOptionText(msg, true))
+	_, _, err := slackClient.PostMessage(input.SlackChannel, slack.MsgOptionText(msg, false))
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func slackLink(title string, url string) string {
+	return fmt.Sprintf("<%s|%s>", url, title)
+}
+
+func getAgeDays(dt time.Time) string {
+	now := time.Now()
+	diff := now.Sub(dt)
+	days := int(math.Round(diff.Hours() / 24))
+
+	if days == 1 {
+		return fmt.Sprintf("%d day", days)
+	}
+
+	return fmt.Sprintf("%d days", days)
 }
