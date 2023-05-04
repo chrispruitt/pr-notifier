@@ -31,6 +31,7 @@ type PullRequest struct {
 			Name string `json:"name"`
 		} `json:"repository"`
 	} `json:"destination"`
+	CommentCount int `json:"comment_count"`
 }
 
 type GetRepositoriesOutput struct {
@@ -235,7 +236,15 @@ func postToSlack(prs []PullRequest, input *NotifySlackInput) error {
 	msg := "*Open PR Digest*\n"
 
 	for _, pr := range prs {
-		msg += fmt.Sprintf("%s - %s - %s - %s\n", pr.Author.DisplayName, pr.Destination.Repository.Name, getAgeDays(pr.CreatedOn), slackLink(pr.Title, pr.Links.Html.Href))
+		msg += fmt.Sprintf("%s - %s - %s - %s", pr.Author.DisplayName, pr.Destination.Repository.Name, getAgeDays(pr.CreatedOn), slackLink(pr.Title, pr.Links.Html.Href))
+		if pr.CommentCount > 0 {
+			if pr.CommentCount == 1 {
+				msg += fmt.Sprintf(" (%d comment)", pr.CommentCount)
+			} else {
+				msg += fmt.Sprintf(" (%d comments)", pr.CommentCount)
+			}
+		}
+		msg += "\n"
 	}
 	_, _, err := slackClient.PostMessage(input.SlackChannel, slack.MsgOptionText(msg, false))
 	if err != nil {
