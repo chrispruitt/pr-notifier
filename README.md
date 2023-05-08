@@ -31,3 +31,6 @@ docker run -it chrispruitt/pr-notifier:latest \
     --password XXXXXXXXXXXXXX \
     --token xoxb-XXXXXXX
 ```
+
+## Roadmap
+- [ ] Handle bitbucket response type of "error" properly (when user or project is not found)

@@ -20,6 +20,7 @@ type PullRequestOutput struct {
 }
 
 type PullRequest struct {
+	ID     int    `json:"id"`
 	Links  Links  `json:"links"`
 	Title  string `json:"title"`
 	Author struct {
@@ -94,6 +95,8 @@ func NotifySlack(input *NotifySlackInput) error {
 	sort.Slice(prs[:], func(i, j int) bool {
 		return prs[i].CreatedOn.After(prs[j].CreatedOn)
 	})
+
+	prs = uniquePrs(prs)
 
 	if len(prs) > 0 {
 		err := postToSlack(prs, input)
@@ -267,4 +270,20 @@ func getAgeDays(dt time.Time) string {
 	}
 
 	return fmt.Sprintf("%d days", days)
+}
+
+func uniquePrs(origin []PullRequest) []PullRequest {
+	var unique []PullRequest
+	type key struct{ ID int }
+	m := make(map[key]int)
+	for _, v := range origin {
+		k := key{v.ID}
+		if i, ok := m[k]; ok {
+			unique[i] = v
+		} else {
+			m[k] = len(unique)
+			unique = append(unique, v)
+		}
+	}
+	return unique
 }
