@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	lib "github.com/chrispruitt/pr-notifier/lib"
 
@@ -14,13 +15,22 @@ var (
 )
 
 func init() {
-	NotifyCmd.PersistentFlags().StringVarP(&notifySlackInput.BitbucketAppPassUser, "user", "u", "", "bitbucket app username")
-	NotifyCmd.Flags().StringArrayVarP(&notifySlackInput.Usernames, "authors", "a", nil, "bitbucket usernames, UUIDs, or authors of PRs")
-	NotifyCmd.Flags().StringVarP(&notifySlackInput.Workspace, "workspace", "w", "", "bitbucket workspace key. Required when --project-key is set.")
-	NotifyCmd.Flags().StringArrayVar(&notifySlackInput.ProjectKeys, "project-key", nil, "bitbucket workspace key. Required when --project-key is set.")
-	NotifyCmd.Flags().StringVarP(&notifySlackInput.BitbucketAppPassSecret, "password", "p", "", "bitbucket app password")
-	NotifyCmd.Flags().StringVarP(&notifySlackInput.SlackChannel, "channel", "c", "", "slack channel")
-	NotifyCmd.Flags().StringVarP(&notifySlackInput.SlackToken, "token", "t", "", "slack token")
+
+	userEnv := os.Getenv("BB_USERNAME")
+	appPasswordEnv := os.Getenv("BB_APP_PASSWORD")
+	workspaceEnv := os.Getenv("WORKSPACE")
+	slackChannelEnv := os.Getenv("SLACK_CHANNEL")
+	slackTokenEnv := os.Getenv("SLACK_TOKEN")
+	authorsEnv := strings.Split(os.Getenv("AUTHORS"), ",")
+	projectKeysEnv := strings.Split(os.Getenv("PROJECT_KEYS"), ",")
+
+	NotifyCmd.PersistentFlags().StringVarP(&notifySlackInput.BitbucketAppPassUser, "user", "u", userEnv, "bitbucket app username")
+	NotifyCmd.Flags().StringArrayVarP(&notifySlackInput.Usernames, "authors", "a", authorsEnv, "bitbucket usernames, UUIDs, or authors of PRs")
+	NotifyCmd.Flags().StringVarP(&notifySlackInput.Workspace, "workspace", "w", workspaceEnv, "bitbucket workspace key. Required when --project-key is set.")
+	NotifyCmd.Flags().StringArrayVar(&notifySlackInput.ProjectKeys, "project-key", projectKeysEnv, "bitbucket workspace key. Required when --project-key is set.")
+	NotifyCmd.Flags().StringVarP(&notifySlackInput.BitbucketAppPassSecret, "password", "p", appPasswordEnv, "bitbucket app password")
+	NotifyCmd.Flags().StringVarP(&notifySlackInput.SlackChannel, "channel", "c", slackChannelEnv, "slack channel")
+	NotifyCmd.Flags().StringVarP(&notifySlackInput.SlackToken, "token", "t", slackTokenEnv, "slack token")
 	NotifyCmd.Flags().BoolVar(&notifySlackInput.Debug, "debug", false, "enable verbose logging")
 }
 
